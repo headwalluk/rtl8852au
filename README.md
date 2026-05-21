@@ -1,122 +1,25 @@
-# rtl8852au Linux Driver (Community Fork)
+# rtl8852au
 
-[![Kernel 6.x CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=develop)](https://github.com/headwalluk/rtl8852au/actions)
+[![CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=develop)](https://github.com/headwalluk/rtl8852au/actions)
+[![License](https://img.shields.io/badge/license-GPL--2.0-blue)](LICENSE)
+[![Kernel](https://img.shields.io/badge/kernel-5.15--6.18-orange)](docs/install.md)
 
-> **CI Status:** Automated builds are tested against Linux kernels **6.8**, **6.13**, **6.14**, **6.15**, **6.16** and **6.17**.
+Out-of-tree Linux kernel driver for the Realtek **RTL8852AU** / **RTL8832AU** USB Wi-Fi 6 chipsets.
 
-This repository is a community-maintained fork of the original Realtek USB WiFi driver
-**RTL8852AU\_WiFi\_linux\_v1.15.0.1-0-g487ee886.20210714**, which was initially maintained
-by Larry Finger. After Larry's passing, the [pulponair/rtl8852au](https://github.com/pulponair/rtl8852au)
-fork carried the work forward for modern Linux kernels.
-This repository ([headwalluk/rtl8852au](https://github.com/headwalluk/rtl8852au)) is a
-further fork that continues to track current kernel releases.
+## What this is
 
----
+A community-maintained fork of Realtek's vendor driver, kept building against current Linux kernels for users of RTL8852AU-based USB Wi-Fi adapters (D-Link DWA-X1850, ASUS USB-AX56, TP-Link AX1800, BUFFALO WI-U3-1200AX2, ELECOM WDC-X1201DU3, and others — see [supported hardware](docs/supported-hardware.md) for the full list).
 
-## Key Improvements
+If you have one of these adapters and your distro's stock kernel doesn't see it as Wi-Fi, this driver is for you.
 
-* Dropped outdated kernel and platform support (**Linux 5.15+ required**, tested up to **6.17**).
-* Fixed various array out-of-bounds issues and improved overall code safety.
-* Improved USB initialization and streamlined module structure.
-* Extended station information and debug logging.
-* Removed legacy Realtek code for a cleaner, more maintainable driver.
+### Lineage
 
----
+- **Realtek Corporation** — original vendor release `RTL8852AU_WiFi_linux_v1.15.0.1` (July 2021).
+- **Larry Finger** — long-time community maintainer of Realtek wireless drivers on Linux.
+- **[pulponair/rtl8852au](https://github.com/pulponair/rtl8852au)** — carried the fork forward after Larry's passing, modernised for kernels through 6.16.
+- **headwalluk/rtl8852au** (this repo) — continues to track current kernel releases.
 
-## Supported Chipsets
-
-* **rtl8832au**
-* **rtl8852au**
-
----
-
-## Known Supported Devices
-
-* BUFFALO WI-U3-1200AX2(/N) – `0411:0312`
-* ASUS USB-AX56 – `0b05:1997`, `0b05:1a62`
-* EDUP EP-AX1696GS – `0bda:8832`
-* Fenvi FU-AX1800P – `0bda:885c`
-* Realtek Demo Boards – `0bda:8832`, `0bda:885a`, `0bda:885c`
-* D-Link DWA-X1850 – `2001:3321`, `2001:0141`
-* TP-Link AX1800 – `2357:013f`, `2357:0140`
-* TP-Link Archer TX20UH – `2357:0141`
-* TP-Link (vendor 0x35bc) – `35bc:0100`
-* ipTIME AX2000U – `0bda:8832`
-* ELECOM WDC-X1201DU3 – `056e:4020`
-
----
-
-## USB Modeswitch (D-Link DWA-X1850)
-
-Some DWA-X1850 devices appear as a USB disk (`0bda:1a2b`) with Windows drivers.
-To avoid this, add the following rule to either
-`/usr/lib/udev/rules.d/40-usb_modeswitch.rules` or
-`/lib/udev/rules.d/40-usb_modeswitch.rules`:
-
-```bash
-# D-Link DWA-X1850 WiFi Dongle
-ATTR{idVendor}=="0bda", ATTR{idProduct}=="1a2b", RUN+="usb_modeswitch '/%k'"
-```
-
----
-
-## Installation
-
-### Requirements
-
-Install `make`, `gcc`, `kernel headers`, and `git`.
-
-**Ubuntu/Debian:**
-
-```bash
-sudo apt update
-sudo apt install -y make gcc linux-headers-$(uname -r) build-essential git
-```
-
-**Fedora:**
-
-```bash
-sudo dnf install kernel-headers kernel-devel
-sudo dnf group install "C Development Tools and Libraries"
-```
-
-**openSUSE:**
-
-```bash
-sudo zypper install make gcc kernel-devel kernel-default-devel git libopenssl-devel
-```
-
-**Arch Linux:**
-
-```bash
-sudo pacman -S --needed base-devel linux-headers git
-```
-
----
-
-### Manual Build & Install
-
-```bash
-git clone https://github.com/headwalluk/rtl8852au.git
-cd rtl8852au
-make
-sudo make install
-```
-
-After kernel updates:
-
-```bash
-cd rtl8852au
-git pull
-make
-sudo make install
-```
-
----
-
-## DKMS Installation (Recommended)
-
-**DKMS automatically rebuilds this driver when your kernel updates.**
+## Install
 
 ```bash
 git clone https://github.com/headwalluk/rtl8852au.git
@@ -124,67 +27,17 @@ cd rtl8852au
 sudo ./install-dkms.sh
 ```
 
-`install-dkms.sh` is idempotent: it unloads the running module, removes
-any prior DKMS registration of `rtl8852au` (including older versions
-inherited from upstream forks), removes a legacy manual-install `.ko`
-if present, then registers, builds, installs, and loads the current
-source tree.
+`install-dkms.sh` registers the source with DKMS so the module rebuilds automatically on kernel updates. The script is idempotent — re-run it after `git pull` to upgrade. See [docs/install.md](docs/install.md) for distro-specific prerequisites and the manual DKMS recipe.
 
-To verify:
+## Documentation
 
-```bash
-modinfo 8852au
-```
+- [Install / update / uninstall](docs/install.md) — distro requirements, the install script, manual DKMS commands.
+- [Secure Boot](docs/secure-boot.md) — module signing and MOK enrolment.
+- [Supported hardware](docs/supported-hardware.md) — chipsets, known device IDs, and the USB modeswitch quirk for the D-Link DWA-X1850.
+- [TODO / backlog](docs/TODO.md) — deferred cleanup, known bugs, planned work.
+- [Original reference documents](./reference-docs/) — the PDFs shipped with the Realtek vendor drop (config, certification, mode-specific guides).
+- [CHANGELOG](CHANGELOG.md).
 
-**Updating via DKMS** (e.g. after `git pull`):
+## License
 
-```bash
-cd rtl8852au
-git pull
-sudo ./install-dkms.sh
-```
-
-**Uninstalling:**
-
-```bash
-sudo ./uninstall-dkms.sh
-```
-
-<details>
-<summary>Manual DKMS commands (what the script does)</summary>
-
-```bash
-version=$(grep PACKAGE_VERSION dkms.conf | cut -d"=" -f2 | tr -d '"')
-sudo dkms add .
-sudo dkms build rtl8852au/${version}
-sudo dkms install rtl8852au/${version}
-```
-
-If a prior version of the package is already registered with DKMS,
-remove it first with `sudo dkms remove rtl8852au/<old-version> --all`.
-</details>
-
----
-
-## Secure Boot (Optional)
-
-If Secure Boot is enabled, the kernel will refuse to load an unsigned module.
-The `sign-install` target builds, signs, and installs the module in one step:
-
-```bash
-sudo make sign-install
-```
-
-This:
-
-1. Generates a one-time Machine Owner Key (`MOK.priv` / `MOK.der`) in the source tree.
-2. Imports the public key via `mokutil --import` (you will be prompted for a one-time password).
-3. Signs `8852au.ko` with that key and installs it.
-
-**Reboot afterwards** to complete MOK enrolment in shim — the firmware will present
-the enrolment prompt on the next boot and ask for the password you set.
-
-> **Note:** `make sign` regenerates `MOK.der` on every invocation, which would
-> invalidate any earlier signatures. Run the signing step once during initial
-> setup; for subsequent rebuilds (e.g. after a kernel update) use
-> `sudo make install` and re-run signing only if you need a new key.
+GPL-2.0 — see [LICENSE](LICENSE).

@@ -17,6 +17,11 @@ this file was introduced are not backfilled — see the git log for prior histor
   contributors (build flow, source layout, common footguns).
 - This `CHANGELOG.md`.
 - `docs/TODO.md` tracking deferred cleanup and known bugs.
+- `LICENSE` file with the canonical GPL-2.0 text (the project was
+  already GPL-2.0 per `MODULE_LICENSE` and file headers, but no
+  top-level licence file existed — GitHub can now auto-detect it).
+- `docs/install.md`, `docs/secure-boot.md`, `docs/supported-hardware.md`
+  — focused docs for each topic, linked from the README.
 
 ### Changed
 - Project version bumped to `1.17.0` (continuing monotonically from the
@@ -28,13 +33,16 @@ this file was introduced are not backfilled — see the git log for prior histor
 - README rebranded to the headwalluk fork: CI badge, clone URLs, and
   lineage paragraph all updated. Lineage now credits pulponair as the
   prior community maintainer.
-- README Secure Boot section rewritten to document the real `make
-  sign-install` flow and the MOK enrolment gotcha (`make sign`
-  regenerates `MOK.der` on every run).
-- README tested-kernel list synced to what CI actually runs (now
-  includes 6.17).
+- README slimmed: badges (CI / GPL-2.0 / kernel support), short
+  "what this is" + lineage, single-command install, and a links
+  section pointing at the new `docs/` files and `reference-docs/`.
+  All distro requirements, manual DKMS commands, Secure Boot flow,
+  and hardware lists moved out to dedicated docs.
 - README manual-clone snippet switched from the deprecated `git://`
   protocol to `https://`.
+- `document/` directory renamed to `reference-docs/` to better
+  describe what it contains (the Realtek vendor PDFs shipped with
+  the original driver drop).
 
 ### Removed
 - HWSIM build infrastructure (`CONFIG_HWSIM` switch, `HAL = hal_sim`
