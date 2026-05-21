@@ -1,19 +1,21 @@
 # rtl8852au Linux Driver (Community Fork)
 
-[![Kernel 6.x CI](https://github.com/pulponair/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=develop)](https://github.com/pulponair/rtl8852au/actions)
+[![Kernel 6.x CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=develop)](https://github.com/headwalluk/rtl8852au/actions)
 
-> **CI Status:** Automated builds are tested against Linux kernels **6.8**, **6.13**, **6.14**, **6.15** and **6.16**
+> **CI Status:** Automated builds are tested against Linux kernels **6.8**, **6.13**, **6.14**, **6.15**, **6.16** and **6.17**.
 
-This project is a community-maintained fork of the original Realtek USB WiFi driver
-**RTL8852AU\_WiFi\_linux\_v1.15.0.1-0-g487ee886.20210714**,
-which was initially maintained by Larry Finger.
-After Larry's passing, this fork (maintained at [pulponair/rtl8852au](https://github.com/pulponair/rtl8852au)) continues to modernize and improve the driver for current Linux kernels.
+This repository is a community-maintained fork of the original Realtek USB WiFi driver
+**RTL8852AU\_WiFi\_linux\_v1.15.0.1-0-g487ee886.20210714**, which was initially maintained
+by Larry Finger. After Larry's passing, the [pulponair/rtl8852au](https://github.com/pulponair/rtl8852au)
+fork carried the work forward for modern Linux kernels.
+This repository ([headwalluk/rtl8852au](https://github.com/headwalluk/rtl8852au)) is a
+further fork that continues to track current kernel releases.
 
 ---
 
 ## Key Improvements
 
-* Dropped outdated kernel and platform support (**Linux 5.15+ required**, tested up to **6.16**).
+* Dropped outdated kernel and platform support (**Linux 5.15+ required**, tested up to **6.17**).
 * Fixed various array out-of-bounds issues and improved overall code safety.
 * Improved USB initialization and streamlined module structure.
 * Extended station information and debug logging.
@@ -95,7 +97,7 @@ sudo pacman -S --needed base-devel linux-headers git
 ### Manual Build & Install
 
 ```bash
-git clone git://github.com/pulponair/rtl8852au.git
+git clone https://github.com/headwalluk/rtl8852au.git
 cd rtl8852au
 make
 sudo make install
@@ -117,7 +119,7 @@ sudo make install
 **DKMS automatically rebuilds this driver when your kernel updates.**
 
 ```bash
-git clone https://github.com/pulponair/rtl8852au.git
+git clone https://github.com/headwalluk/rtl8852au.git
 cd rtl8852au
 
 # Add the module using its current version (auto-read from dkms.conf)
@@ -149,9 +151,23 @@ sudo dkms install rtl8852au/${version}
 
 ## Secure Boot (Optional)
 
-If Secure Boot is enabled, sign the module:
+If Secure Boot is enabled, the kernel will refuse to load an unsigned module.
+The `sign-install` target builds, signs, and installs the module in one step:
 
 ```bash
-make
-sudo make
+sudo make sign-install
 ```
+
+This:
+
+1. Generates a one-time Machine Owner Key (`MOK.priv` / `MOK.der`) in the source tree.
+2. Imports the public key via `mokutil --import` (you will be prompted for a one-time password).
+3. Signs `8852au.ko` with that key and installs it.
+
+**Reboot afterwards** to complete MOK enrolment in shim — the firmware will present
+the enrolment prompt on the next boot and ask for the password you set.
+
+> **Note:** `make sign` regenerates `MOK.der` on every invocation, which would
+> invalidate any earlier signatures. Run the signing step once during initial
+> setup; for subsequent rebuilds (e.g. after a kernel update) use
+> `sudo make install` and re-run signing only if you need a new key.
