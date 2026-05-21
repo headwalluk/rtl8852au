@@ -26,10 +26,16 @@ this file was introduced are not backfilled — see the git log for prior histor
 ### Changed
 - Project version bumped to `1.17.0` (continuing monotonically from the
   prior fork's `1.16.0.0` so DKMS upgrades cleanly).
-- `DRIVERVERSION` in `include/rtw_version.h` now tracks `PACKAGE_VERSION`;
-  it had been frozen at the original 2021 Realtek vendor string despite
-  years of fork activity, and is user-visible via `modinfo`, `ethtool -i`,
-  and `/proc/net/rtl8852au/`.
+- `dkms.conf` (`PACKAGE_VERSION`) is now the single source of truth for
+  the driver version. The Makefile reads it via shell substitution and
+  injects `-DDRIVERVERSION="v<version>"` at build time, so `modinfo`,
+  `ethtool -i`, `/proc/net/rtl8852au/`, and `MODULE_VERSION` all update
+  automatically. `include/rtw_version.h` is reduced to a fallback that
+  only fires when the macro hasn't been defined on the command line
+  (for IDE / standalone builds). Previously the two locations had to be
+  kept in sync by hand, and `DRIVERVERSION` had silently drifted for
+  several fork generations. The release process is now documented in
+  `CLAUDE.md`.
 - README rebranded to the headwalluk fork: CI badge, clone URLs, and
   lineage paragraph all updated. Lineage now credits pulponair as the
   prior community maintainer.

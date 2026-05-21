@@ -19,6 +19,15 @@ GCC_VER_49 := $(shell echo `$(CC) -dumpversion | cut -f1-2 -d.` \>= 4.9 | bc )
 
 EXTRA_CFLAGS += -I$(src)/include
 
+# Single source of truth for the driver version: dkms.conf.
+# Works in both the outer make pass and the kbuild recursive pass
+# (kbuild sets $(src); outer pass uses $(CURDIR)). If dkms.conf is
+# unreadable, leave DRIVERVERSION undefined and let
+# include/rtw_version.h provide its fallback.
+DRIVERVERSION := $(shell awk -F'"' '/^PACKAGE_VERSION=/ {print $$2; exit}' $(if $(src),$(src),$(CURDIR))/dkms.conf 2>/dev/null)
+ifneq ($(DRIVERVERSION),)
+EXTRA_CFLAGS += -DDRIVERVERSION=\"v$(DRIVERVERSION)\"
+endif
 
 EXTRA_LDFLAGS += --strip-debug
 

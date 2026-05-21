@@ -20,7 +20,7 @@ make sign                  # generate MOK + sign 8852au.ko for Secure Boot (inte
 make sign-install          # all + sign + install
 ```
 
-DKMS is the recommended path for users (see `dkms.conf`, `PACKAGE_VERSION="1.16.0.0"`). README has the canonical `dkms add/build/install` recipe.
+DKMS is the recommended path for users. `dkms.conf` carries the canonical version (`PACKAGE_VERSION`); `docs/install.md` has the human-facing recipe; `install-dkms.sh` / `uninstall-dkms.sh` wrap the full register/build/install/cleanup dance idempotently.
 
 There are no unit tests. "Test" = build cleanly against a target kernel and load the module on real hardware. CI (`.github/workflows/kernel-build.yml`) downloads mainline kernel headers from `kernel.ubuntu.com/mainline/v<ver>/amd64/` and runs `make clean && make -j$(nproc) KSRC=...` against each matrix kernel — replicate that locally when validating kernel-compat changes.
 
@@ -37,6 +37,20 @@ Object file lists live in two includes pulled in only on the kbuild pass:
 So: adding a new `.c` file means appending to `_OS_INTFS_FILES` / `_CORE_FILES` in `common.mk` (or the appropriate list in `phl/phl.mk`), not just dropping it in the directory.
 
 `platform/*.mk` is wildcard-included before the kbuild pass and can override `KSRC` / `CROSS_COMPILE` — the default `i386_pc.mk` points `KSRC` at `/lib/modules/$(shell uname -r)/build`.
+
+## Releasing / bumping the version
+
+The version is declared **once** in `dkms.conf` (`PACKAGE_VERSION`). The Makefile reads it via an `awk` shell-substitution and `-D`s `DRIVERVERSION=\"v<version>\"` into the build, so `modinfo`, `ethtool -i`, `/proc/net/rtl8852au/`, and the kernel's `MODULE_VERSION` macro all update automatically on the next build. `include/rtw_version.h` is a fallback header that only defines `DRIVERVERSION` if the macro hasn't already been set on the command line — relevant for IDE / standalone builds that bypass the project Makefile.
+
+To cut a release (e.g. bumping to `1.18.0`):
+
+1. **`dkms.conf`** — set `PACKAGE_VERSION="1.18.0"`. *This is the only file that touches the version number.* Do not edit `include/rtw_version.h` or `docs/install.md`'s example `modinfo` output by hand.
+2. **`CHANGELOG.md`** — rename `## [Unreleased]` to `## [1.18.0] — YYYY-MM-DD`, then add a fresh empty `## [Unreleased]` block above it. Entries should already be sorted into Keep-a-Changelog categories (Added / Changed / Deprecated / Removed / Fixed / Security).
+3. **`README.md`** — only if the supported-kernel range changed (e.g. CI matrix gained a new version): update the **Kernel** badge URL (`https://img.shields.io/badge/kernel-5.15--6.18-orange`) and the lineage paragraph's "tracks current kernel releases" claim if relevant.
+4. **Verify** — `make clean && make` locally, then `modinfo 8852au.ko | grep ^version` should report the new `v1.18.0`.
+5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag v1.18.0`, `git push origin develop --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
+
+Do **not** bump `RTK_CORE_TAGINFO` in `phl/phl_git_info.h` as part of fork releases — that macro is the original Realtek upstream tag (frozen at the 2021 vendor drop) and has a different semantic.
 
 ## Source layout (the parts you need to know)
 
