@@ -1,6 +1,6 @@
 # rtl8852au
 
-[![CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=develop)](https://github.com/headwalluk/rtl8852au/actions)
+[![CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=main)](https://github.com/headwalluk/rtl8852au/actions)
 [![License](https://img.shields.io/badge/license-GPL--2.0-blue)](LICENSE)
 [![Kernel](https://img.shields.io/badge/kernel-5.15--6.18-orange)](docs/install.md)
 

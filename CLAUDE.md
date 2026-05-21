@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Out-of-tree Linux kernel driver for the Realtek RTL8852AU / RTL8832AU USB Wi-Fi 6 chipsets. Community fork (pulponair/rtl8852au) of the original Realtek vendor driver, modernized for current kernels. Default branch is `develop`. Required kernel ≥ 5.15; CI builds against 6.8, 6.13–6.17.
+Out-of-tree Linux kernel driver for the Realtek RTL8852AU / RTL8832AU USB Wi-Fi 6 chipsets. Community fork (pulponair/rtl8852au) of the original Realtek vendor driver, modernized for current kernels. Default branch is `main`. Required kernel ≥ 5.15; CI builds against 6.8, 6.13–6.17.
 
 The build produces a single kernel module: **`8852au.ko`** (module name derived in `Makefile` from `CONFIG_RTL8852A=y` + `CONFIG_USB_HCI=y`). PCI/SDIO/GSPI scaffolding exists but is disabled.
 
@@ -48,7 +48,7 @@ To cut a release (e.g. bumping to `1.18.0`):
 2. **`CHANGELOG.md`** — rename `## [Unreleased]` to `## [1.18.0] — YYYY-MM-DD`, then add a fresh empty `## [Unreleased]` block above it. Entries should already be sorted into Keep-a-Changelog categories (Added / Changed / Deprecated / Removed / Fixed / Security).
 3. **`README.md`** — only if the supported-kernel range changed (e.g. CI matrix gained a new version): update the **Kernel** badge URL (`https://img.shields.io/badge/kernel-5.15--6.18-orange`) and the lineage paragraph's "tracks current kernel releases" claim if relevant.
 4. **Verify** — `make clean && make` locally, then `modinfo 8852au.ko | grep ^version` should report the new `v1.18.0`.
-5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag v1.18.0`, `git push origin develop --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
+5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag v1.18.0`, `git push origin main --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
 
 Do **not** bump `RTK_CORE_TAGINFO` in `phl/phl_git_info.h` as part of fork releases — that macro is the original Realtek upstream tag (frozen at the 2021 vendor drop) and has a different semantic.
 

@@ -8,6 +8,13 @@ this file was introduced are not backfilled — see the git log for prior histor
 
 ## [Unreleased]
 
+### Changed
+- Default branch renamed from `develop` to `main` (with the stale
+  inherited `origin/main` removed first). `main` is now the canonical
+  trunk and the only long-lived branch. Tags continue to mark stable
+  release points. README CI badge URL, CLAUDE.md release flow, and
+  `docs/TODO.md` updated accordingly.
+
 ## [1.17.0] — 2026-05-21
 
 First release under the headwalluk fork. Establishes baseline quality of life

@@ -82,15 +82,15 @@ recorded so they don't get lost between sessions.
 
 ## Process
 
-- [ ] **Tidy up inherited origin branches.** The fork brought across
-  `origin/main` and three `feature/*` branches (`feature/27-bring-retry-and-failed-counter`,
-  `feature/30-Cleanup-Makefile-and-Remove-Configurion-Options`,
-  `feature/32-Stabilize-rsn-ei-assoc`) from the pulponair tree. None
-  of them are doing useful work in this fork — `develop` is the
-  canonical branch. Audit the feature branches for any salvageable
+- [ ] **Tidy up inherited `feature/*` branches.** Three branches
+  remain on origin from the pulponair tree:
+  `feature/27-bring-retry-and-failed-counter`,
+  `feature/30-Cleanup-Makefile-and-Remove-Configurion-Options`, and
+  `feature/32-Stabilize-rsn-ei-assoc`. None are part of this fork's
+  workflow — `main` is canonical. Audit each for any salvageable
   changes, then `git push origin --delete <branch>` for the rest.
-  Decide whether to keep `main` as a fast-forwarded mirror of
-  `develop` or drop it.
+  (The previously-stale `origin/main` was already removed as part of
+  the develop → main rename in 1.17.0.)
 
 - [ ] **Decide on a release cadence.** Versions inherited from
   pulponair were bumped opportunistically; with semver now in place
