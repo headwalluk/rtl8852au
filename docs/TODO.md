@@ -53,10 +53,13 @@ recorded so they don't get lost between sessions.
   stable 6.18 build at `kernel.ubuntu.com/mainline/v6.18/amd64/` (the
   workflow scrapes that index).
 
-- [ ] **Tag `v1.17.0` once Pi build and load are confirmed.** Sequence:
-  rename `[Unreleased]` → `[1.17.0] — <date>` in `CHANGELOG.md`, add
-  a fresh empty `[Unreleased]` above, commit, `git tag v1.17.0`,
-  push tag, cut a GitHub release.
+- [ ] **Bump `actions/checkout` past Node 20.** GitHub will force
+  Node 24 in CI runners from June 2026 and remove Node 20 entirely
+  in September 2026. Current `.github/workflows/kernel-build.yml`
+  uses `actions/checkout@v4` which runs on Node 20 — every CI run
+  annotates a deprecation warning. Either pin to a newer
+  `actions/checkout` major when one is published, or set
+  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` in the workflow env.
 
 - [ ] **Cross-arch CI coverage.** The current workflow only builds
   on `ubuntu-24.04` (amd64). Add an `aarch64` cross-build job so
@@ -78,6 +81,16 @@ recorded so they don't get lost between sessions.
   or drop it. README's Secure Boot section warns users for now.
 
 ## Process
+
+- [ ] **Tidy up inherited origin branches.** The fork brought across
+  `origin/main` and three `feature/*` branches (`feature/27-bring-retry-and-failed-counter`,
+  `feature/30-Cleanup-Makefile-and-Remove-Configurion-Options`,
+  `feature/32-Stabilize-rsn-ei-assoc`) from the pulponair tree. None
+  of them are doing useful work in this fork — `develop` is the
+  canonical branch. Audit the feature branches for any salvageable
+  changes, then `git push origin --delete <branch>` for the rest.
+  Decide whether to keep `main` as a fast-forwarded mirror of
+  `develop` or drop it.
 
 - [ ] **Decide on a release cadence.** Versions inherited from
   pulponair were bumped opportunistically; with semver now in place

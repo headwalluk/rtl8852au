@@ -8,6 +8,13 @@ this file was introduced are not backfilled — see the git log for prior histor
 
 ## [Unreleased]
 
+## [1.17.0] — 2026-05-21
+
+First release under the headwalluk fork. Establishes baseline quality of life
+improvements over the inherited tree: kernel 6.18 support, single-source-of-
+truth versioning, an idempotent DKMS install flow, and a restructured `docs/`
+tree.
+
 ### Added
 - `install-dkms.sh` and `uninstall-dkms.sh` for one-shot, idempotent DKMS
   install and removal. The install script handles the upgrade path from
