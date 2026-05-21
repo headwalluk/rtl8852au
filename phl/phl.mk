@@ -1,12 +1,8 @@
 ########### COMMON PATH  #################################
-ifeq ($(CONFIG_HWSIM), y)
-	HAL = hal_sim
-else
-	ifeq ($(CONFIG_WIFI_6), y)
+ifeq ($(CONFIG_WIFI_6), y)
 	HAL = hal_g6
-	else
+else
 	HAL = hal
-	endif
 endif
 
 ifeq ($(CONFIG_PHL_ARCH), y)

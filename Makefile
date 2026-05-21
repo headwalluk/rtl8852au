@@ -84,8 +84,6 @@ CONFIG_PHL_ARCH = y
 CONFIG_FSM = n
 CONFIG_CMD_DISP = y
 
-CONFIG_HWSIM = n
-
 CONFIG_PHL_TEST_SUITE = n
 CONFIG_WIFI_6 = y
 
@@ -175,11 +173,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 HCI_NAME = pci
 endif
 
-ifeq ($(CONFIG_HWSIM), y)
-	HAL = hal_sim
-else
-	HAL = phl
-endif
+HAL = phl
 
 DRV_PATH = $(TopDIR)
 
@@ -532,14 +526,6 @@ ifeq ($(USE_TRUE_PHY), y)
 EXTRA_CFLAGS += -DUSE_TRUE_PHY
 endif
 
-ifeq ($(CONFIG_HWSIM), y)
-EXTRA_CFLAGS += -DCONFIG_HWSIM
-
-# To use pure sw beacon
-EXTRA_CFLAGS += -DCONFIG_SWTIMER_BASED_TXBCN
-EXTRA_CFLAGS += -DCONFIG_SUPPORT_MULTI_BCN
-endif
-
 ifeq ($(CONFIG_DRV_FAKE_AP), y)
 EXTRA_CFLAGS += -DCONFIG_DRV_FAKE_AP
 OBJS += core/rtw_fake_ap.o
@@ -668,7 +654,6 @@ clean:
 	cd core ; rm -fr */*.mod.c */*.mod */*.o */.*.cmd */*.ko
 	cd core ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd os_dep/linux ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
-	cd os_dep/linux/hwsim ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd os_dep ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd platform ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	rm -fr Module.symvers ; rm -fr Module.markers ; rm -fr modules.order

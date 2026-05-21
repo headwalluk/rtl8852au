@@ -16,6 +16,7 @@ this file was introduced are not backfilled — see the git log for prior histor
 - `CLAUDE.md` onboarding notes for code-assistant agents and new
   contributors (build flow, source layout, common footguns).
 - This `CHANGELOG.md`.
+- `docs/TODO.md` tracking deferred cleanup and known bugs.
 
 ### Changed
 - Project version bumped to `1.17.0` (continuing monotonically from the
@@ -35,8 +36,20 @@ this file was introduced are not backfilled — see the git log for prior histor
 - README manual-clone snippet switched from the deprecated `git://`
   protocol to `https://`.
 
+### Removed
+- HWSIM build infrastructure (`CONFIG_HWSIM` switch, `HAL = hal_sim`
+  branch, dead `_OS_INTFS_FILES` entries in `common.mk`, broken
+  `cd os_dep/linux/hwsim` line in the `clean` target). The HWSIM
+  source directories had already been deleted from the tree in an
+  earlier fork commit but the build glue was left behind referencing
+  files that no longer existed. Source-level `#ifdef CONFIG_HWSIM`
+  blocks are unreachable now and are tracked for removal in
+  `docs/TODO.md`.
+
 ### Fixed
 - Build failure on Linux 6.18 caused by a symbol clash with the kernel's new
   `hmac_sha256()` in `<crypto/sha2.h>`. The local `hmac_sha256()` was unused,
   so it (and the dead `hmac_sha256_kdf` declaration) have been removed rather
   than version-gated.
+- `make clean` no longer prints `cd: can't cd to os_dep/linux/hwsim`
+  (cosmetic; the missing directory was harmless but noisy).

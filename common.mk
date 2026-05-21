@@ -15,21 +15,8 @@ _OS_INTFS_FILES :=	os_dep/osdep_service.o \
 			os_dep/linux/nlrtw.o \
 			os_dep/linux/rtw_rhashtable.o
 
-ifeq ($(CONFIG_HWSIM), y)
-	_OS_INTFS_FILES += os_dep/linux/hwsim/medium/local.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/medium/sock_udp.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/medium/loopback.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/core.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/txrx.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/netdev.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/cfg80211.o
-	_OS_INTFS_FILES += os_dep/linux/hwsim/platform_dev.o
-
-	_OS_INTFS_FILES += os_dep/linux/$(HCI_NAME)_ops_linux.o
-else
-	_OS_INTFS_FILES += os_dep/linux/$(HCI_NAME)_intf.o
-	_OS_INTFS_FILES += os_dep/linux/$(HCI_NAME)_ops_linux.o
-endif
+_OS_INTFS_FILES += os_dep/linux/$(HCI_NAME)_intf.o
+_OS_INTFS_FILES += os_dep/linux/$(HCI_NAME)_ops_linux.o
 
 ifeq ($(CONFIG_MP_INCLUDED), y)
 _OS_INTFS_FILES += os_dep/linux/ioctl_mp.o \
