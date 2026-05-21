@@ -8,6 +8,14 @@ this file was introduced are not backfilled — see the git log for prior histor
 
 ## [Unreleased]
 
+### Added
+- README "Before you install: do you actually need this?" section
+  pointing users at `modinfo rtw89_8852au` to check whether the
+  mainline in-tree driver already covers their adapter. The
+  in-tree `rtw89` driver has been adding USB chipset support over
+  recent kernels, so an honest exit-ramp before the DKMS install
+  saves users a step they may not need.
+
 ### Changed
 - Default branch renamed from `develop` to `main` (with the stale
   inherited `origin/main` removed first). `main` is now the canonical

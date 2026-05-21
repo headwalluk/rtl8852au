@@ -19,6 +19,22 @@ If you have one of these adapters and your distro's stock kernel doesn't see it 
 - **[pulponair/rtl8852au](https://github.com/pulponair/rtl8852au)** — carried the fork forward after Larry's passing, modernised for kernels through 6.16.
 - **headwalluk/rtl8852au** (this repo) — continues to track current kernel releases.
 
+## Before you install: do you actually need this?
+
+The mainline kernel includes an in-tree `rtw89` driver that has been adding support for these USB chipsets over recent releases. Before installing this out-of-tree driver, check whether your distro's kernel already covers your adapter:
+
+```bash
+modinfo rtw89_8852au
+```
+
+If that command returns a match (rather than `ERROR: Module rtw89_8852au not found.`) and your adapter shows up under `iw dev` once it's plugged in, you don't need this project — the in-tree driver has you covered.
+
+You may still want this driver if:
+
+- Your kernel pre-dates `rtw89` USB support (mainline added it gradually).
+- The in-tree driver is present but doesn't bind to your specific USB ID — community-reported devices in this fork's [supported hardware list](docs/supported-hardware.md) may be ahead of upstream.
+- You need a feature or fix that hasn't landed upstream yet.
+
 ## Install
 
 ```bash
