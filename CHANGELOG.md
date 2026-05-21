@@ -42,7 +42,16 @@ this file was introduced are not backfilled — see the git log for prior histor
   protocol to `https://`.
 - `document/` directory renamed to `reference-docs/` to better
   describe what it contains (the Realtek vendor PDFs shipped with
-  the original driver drop).
+  the original driver drop). `ReleaseNotes.pdf` (Realtek's release
+  notes for the v1.15.0.1 vendor drop) also moved here from the
+  repo root, alongside its siblings.
+- Vendor-era helper scripts moved out of the project root into
+  `archive/`: `clean` (runs `rmmod` against rtl8192-family modules
+  unrelated to this driver), `runwpa` (refers to a `wpa1.conf` that
+  was never in-tree), `wlan0dhcp` (pre-NetworkManager DIY DHCP
+  driver), and `ifcfg-wlan0` (RHEL-style snippet only used by
+  `wlan0dhcp`). `archive/README.md` documents what each file was
+  and why it's no longer at the root.
 
 ### Removed
 - HWSIM build infrastructure (`CONFIG_HWSIM` switch, `HAL = hal_sim`

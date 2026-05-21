@@ -23,6 +23,17 @@ recorded so they don't get lost between sessions.
   (50+ files), best done as its own PR with a clear "5.15 is the
   floor" commit message.
 
+- [ ] **Relocate support scripts and snippets out of the project root.**
+  `suspend_rtw8852au` currently lives at the repo root because the
+  `install:` target in `Makefile` copies it from there to
+  `/usr/lib/systemd/system-sleep/`. A tidier home would be a
+  `scripts/` directory (for executable helpers) and/or an `etc/`
+  directory (for config snippets / udev rules / systemd units). When
+  doing this, update the Makefile install rule to point at the new
+  path, and check whether any user-facing docs need adjusting.
+  Bundle with whatever else lands at the root over time (e.g. helper
+  scripts spun off from `install-dkms.sh`).
+
 - [ ] **Audit the dead `CONFIG_*` switches in `Makefile`.** Several
   toggles are set to `n` and never flipped by anything we care about:
   `CONFIG_MP_INCLUDED`, `CONFIG_CONCURRENT_MODE`, `CONFIG_BTC`,
