@@ -121,13 +121,14 @@ sudo make install
 ```bash
 git clone https://github.com/headwalluk/rtl8852au.git
 cd rtl8852au
-
-# Add the module using its current version (auto-read from dkms.conf)
-version=$(grep PACKAGE_VERSION dkms.conf | cut -d"=" -f2 | tr -d '"')
-sudo dkms add .
-sudo dkms build rtl8852au/${version}
-sudo dkms install rtl8852au/${version}
+sudo ./install-dkms.sh
 ```
+
+`install-dkms.sh` is idempotent: it unloads the running module, removes
+any prior DKMS registration of `rtl8852au` (including older versions
+inherited from upstream forks), removes a legacy manual-install `.ko`
+if present, then registers, builds, installs, and loads the current
+source tree.
 
 To verify:
 
@@ -135,17 +136,33 @@ To verify:
 modinfo 8852au
 ```
 
-**Updating via DKMS:**
+**Updating via DKMS** (e.g. after `git pull`):
 
 ```bash
 cd rtl8852au
 git pull
+sudo ./install-dkms.sh
+```
+
+**Uninstalling:**
+
+```bash
+sudo ./uninstall-dkms.sh
+```
+
+<details>
+<summary>Manual DKMS commands (what the script does)</summary>
+
+```bash
 version=$(grep PACKAGE_VERSION dkms.conf | cut -d"=" -f2 | tr -d '"')
-sudo dkms remove rtl8852au/${version} --all
 sudo dkms add .
 sudo dkms build rtl8852au/${version}
 sudo dkms install rtl8852au/${version}
 ```
+
+If a prior version of the package is already registered with DKMS,
+remove it first with `sudo dkms remove rtl8852au/<old-version> --all`.
+</details>
 
 ---
 
