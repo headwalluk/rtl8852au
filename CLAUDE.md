@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Out-of-tree Linux kernel driver for the Realtek RTL8852AU / RTL8832AU USB Wi-Fi 6 chipsets. Community fork (pulponair/rtl8852au) of the original Realtek vendor driver, modernized for current kernels. Default branch is `main`. Required kernel ≥ 5.15; CI builds against 6.8, 6.13–6.17.
+Out-of-tree Linux kernel driver for the Realtek RTL8852AU / RTL8832AU USB Wi-Fi 6 chipsets. Community fork (pulponair/rtl8852au) of the original Realtek vendor driver, modernized for current kernels. Default branch is `main`. Required kernel ≥ 5.15; CI builds the latest point release of 5.15, 6.1, 6.6, 6.8, 6.12, 6.18, current stable, and the newest `-rc`.
 
 The build produces a single kernel module: **`8852au.ko`** (module name derived in `Makefile` from `CONFIG_RTL8852A=y` + `CONFIG_USB_HCI=y`). PCI/SDIO/GSPI scaffolding exists but is disabled.
 
@@ -22,7 +22,7 @@ make sign-install          # all + sign + install
 
 DKMS is the recommended path for users. `dkms.conf` carries the canonical version (`PACKAGE_VERSION`); `docs/install.md` has the human-facing recipe; `install-dkms.sh` / `uninstall-dkms.sh` wrap the full register/build/install/cleanup dance idempotently.
 
-There are no unit tests. "Test" = build cleanly against a target kernel and load the module on real hardware. CI (`.github/workflows/kernel-build.yml`) downloads mainline kernel headers from `kernel.ubuntu.com/mainline/v<ver>/amd64/` and runs `make clean && make -j$(nproc) KSRC=...` against each matrix kernel — replicate that locally when validating kernel-compat changes.
+There are no unit tests. "Test" = build cleanly against a target kernel and load the module on real hardware. CI (`.github/workflows/kernel-build.yml`) resolves each matrix *series* to its newest point release on `kernel.ubuntu.com/mainline/`, installs those headers inside the Ubuntu container they were built for, installs the exact gcc named in the headers' `CONFIG_CC_VERSION_TEXT` (the headers' Makefile hard-codes e.g. `CC = gcc-15`), and runs `make clean && make -j$(nproc) KSRC=...`. It also runs weekly. To replicate locally without containers, `dpkg-deb -x` the two header debs and build with `KSRC=<…-generic dir> CC=gcc-NN HOSTCC=gcc-NN` using whatever gcc you have — good enough to surface API breakage.
 
 ## How the build is wired
 
@@ -46,7 +46,7 @@ To cut a release (e.g. bumping to `1.18.0`):
 
 1. **`dkms.conf`** — set `PACKAGE_VERSION="1.18.0"`. *This is the only file that touches the version number.* Do not edit `include/rtw_version.h` or `docs/install.md`'s example `modinfo` output by hand.
 2. **`CHANGELOG.md`** — rename `## [Unreleased]` to `## [1.18.0] — YYYY-MM-DD`, then add a fresh empty `## [Unreleased]` block above it. Entries should already be sorted into Keep-a-Changelog categories (Added / Changed / Deprecated / Removed / Fixed / Security).
-3. **`README.md`** — only if the supported-kernel range changed (e.g. CI matrix gained a new version): update the **Kernel** badge URL (`https://img.shields.io/badge/kernel-5.15--6.18-orange`) and the lineage paragraph's "tracks current kernel releases" claim if relevant.
+3. **`README.md`** — only if the supported-kernel range changed (e.g. CI matrix gained a new version): update the **Kernel** badge URL (`https://img.shields.io/badge/kernel-5.15--7.0-orange`) and the lineage paragraph's "tracks current kernel releases" claim if relevant.
 4. **Verify** — `make clean && make` locally, then `modinfo 8852au.ko | grep ^version` should report the new `v1.18.0`.
 5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag v1.18.0`, `git push origin main --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
 
@@ -66,7 +66,8 @@ The codebase is divided into three layers that talk through narrow interfaces �
 
 - **Editing `Makefile` or `*.mk`?** Run `make clean` before rebuilding. kbuild's `.cmd` cache files don't track make-variable changes and will happily link a stale `.o`.
 - **Per-kernel guards** use `LINUX_VERSION_CODE` / `KERNEL_VERSION(x,y,z)` checks scattered across `os_dep/linux/`. When supporting a new kernel, search for the most recent existing guard (e.g., `KERNEL_VERSION(6, 17`) and follow its pattern rather than inventing a new style.
+- **Stable backports break plain `>= X.Y` guards.** Mainline API changes sometimes get backported into LTS point releases (e.g. `set_monitor_channel`'s `net_device` arg: 6.13 → 6.12.101; `usb_driver.drvwrap` removal: 6.8 → 6.6.157 / 6.1.188). Find the exact cutoff by fetching the header at stable tags — `https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/<path>?h=v<ver>` — and bisecting, then guard the range with a comment naming it.
 - **Module is USB-only** in shipped config. `CONFIG_PCI_HCI` / `CONFIG_SDIO_HCI` source files exist but are not compiled. Don't waste time chasing PCI-only bugs unless explicitly enabling that HCI.
 - **`CONFIG_RTW_DEBUG=0`** by default — bumping it and rebuilding is the standard way to get verbose logs. `CONFIG_PROC_DEBUG=y` enables `/proc/net/rtl8852au/` interfaces.
 - **`make clean` is custom**, not kbuild's clean. It hand-removes `.o`/`.mod`/`.ko`/`.*.cmd` under `core/`, `os_dep/`, `phl/` (`$(HAL)`), `platform/`. New source directories won't be cleaned unless added there.
-- README's "Secure Boot" section ends with `make` / `sudo make` which is misleading — the real signing target is `make sign` (or `make sign-install`).
+- **Secure Boot**: DKMS 3.x signs modules itself with `/var/lib/dkms/mok.key`; `make sign` / `make sign-install` are only for the non-DKMS `make install` path, and the two don't mix (see `docs/secure-boot.md`).

@@ -34,6 +34,14 @@ recorded so they don't get lost between sessions.
   Bundle with whatever else lands at the root over time (e.g. helper
   scripts spun off from `install-dkms.sh`).
 
+- [ ] **Delete dead `core/rtw_mem.c`.** Leftover from Realtek's
+  separate `rtkm` RX-buffer preallocation module. It's in no object
+  list (`common.mk` / `phl/phl.mk`), so it is never compiled — its
+  stray `MODULE_VERSION("DRIVERVERSION")` literal is harmless. Remove
+  it together with `include/rtw_mem.h` and the
+  `CONFIG_PREALLOC_RX_SKB_BUFFER` include in `include/drv_types.h`
+  once nothing else needs the header.
+
 - [ ] **Audit the dead `CONFIG_*` switches in `Makefile`.** Several
   toggles are set to `n` and never flipped by anything we care about:
   `CONFIG_MP_INCLUDED`, `CONFIG_CONCURRENT_MODE`, `CONFIG_BTC`,
@@ -46,20 +54,16 @@ recorded so they don't get lost between sessions.
 
 ## Build / CI
 
-- [ ] **Add Linux 6.18 to the CI matrix.** We've confirmed the
-  `hmac_sha256` fix produces a working module on a Pi 5 running
-  6.18. Add `"6.18"` to the matrix in
-  `.github/workflows/kernel-build.yml` once Ubuntu mainline has a
-  stable 6.18 build at `kernel.ubuntu.com/mainline/v6.18/amd64/` (the
-  workflow scrapes that index).
-
-- [ ] **Bump `actions/checkout` past Node 20.** GitHub will force
-  Node 24 in CI runners from June 2026 and remove Node 20 entirely
-  in September 2026. Current `.github/workflows/kernel-build.yml`
-  uses `actions/checkout@v4` which runs on Node 20 — every CI run
-  annotates a deprecation warning. Either pin to a newer
-  `actions/checkout` major when one is published, or set
-  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` in the workflow env.
+- [ ] **Port to Linux 7.1+.** Builds fail from 7.1 on (CI's
+  current-stable and `rc` jobs are red until this lands). Needed:
+  7.1 moved the cfg80211 key ops (`add/get/del_key`,
+  `set_default_key`, `set_default_mgmt_key`, …) and station ops
+  (`get/add/del/change_station`, `dump_station`) from
+  `struct net_device *` to `struct wireless_dev *`, and
+  `cfg80211_new_sta()` / `cfg80211_del_sta()` likewise; 7.2 removed
+  `WIPHY_FLAG_SUPPORTS_5_10_MHZ` and `strncpy` is no longer declared
+  (`ioctl_cfg80211.c`, `os_intfs.c`); 7.3-rc changes the
+  `remain_on_channel` / `mgmt_tx` cookie arguments.
 
 - [ ] **Cross-arch CI coverage.** The current workflow only builds
   on `ubuntu-24.04` (amd64). Add an `aarch64` cross-build job so
@@ -67,18 +71,18 @@ recorded so they don't get lost between sessions.
 
 ## Bugs
 
-- [ ] **Stray `MODULE_VERSION("DRIVERVERSION")` in `core/rtw_mem.c:22`.**
-  Passes the literal string `"DRIVERVERSION"` rather than the macro.
-  There's also a correct `MODULE_VERSION(DRIVERVERSION)` in
-  `os_dep/linux/os_intfs.c:22`, so the module ends up with two
-  `MODULE_VERSION` declarations — the kbuild output keeps one and
-  silently drops the other. Remove the broken duplicate.
-
 - [ ] **`make sign` regenerates `MOK.der` on every run.** The
   `NO_SKIP_SIGN` guard in `Makefile:30-32` looks like it was meant
   to detect an existing key and skip regeneration, but the variable
   is never actually consumed by the `sign` target. Either wire it up
-  or drop it. README's Secure Boot section warns users for now.
+  or drop it. `docs/secure-boot.md` warns users for now.
+
+- [ ] **DKMS installs never get the suspend hook.** `suspend_rtw8852au`
+  is only copied to `/usr/lib/systemd/system-sleep/` by `make
+  install`; `install-dkms.sh` (the recommended path) doesn't install
+  it, and `uninstall-dkms.sh` wouldn't remove it. Decide whether the
+  unload-around-suspend workaround is still needed, then either wire
+  it into the DKMS scripts or drop it.
 
 ## Process
 

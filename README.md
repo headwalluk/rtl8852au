@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/headwalluk/rtl8852au/actions/workflows/kernel-build.yml/badge.svg?branch=main)](https://github.com/headwalluk/rtl8852au/actions)
 [![License](https://img.shields.io/badge/license-GPL--2.0-blue)](LICENSE)
-[![Kernel](https://img.shields.io/badge/kernel-5.15--6.18-orange)](docs/install.md)
+[![Kernel](https://img.shields.io/badge/kernel-5.15--7.0-orange)](docs/install.md)
 
 Out-of-tree Linux kernel driver for the Realtek **RTL8852AU** / **RTL8832AU** USB Wi-Fi 6 chipsets.
 
