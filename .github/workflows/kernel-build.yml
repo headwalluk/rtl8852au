@@ -4,59 +4,94 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Weekly, so stable point releases that backport API changes get caught
+    # even when nothing has been pushed.
+    - cron: "17 4 * * 1"
 
 jobs:
   build:
+    name: build (${{ matrix.series }})
     runs-on: ubuntu-24.04
+    # Ubuntu's mainline headers are built inside a matching Ubuntu release and
+    # hard-code its gcc (e.g. CC = gcc-15), so each series runs in that image.
+    container: ubuntu:${{ matrix.image }}
+    continue-on-error: ${{ matrix.series == 'rc' }}
     strategy:
       fail-fast: false
       matrix:
-        kernel: [ "6.8", "6.13", "6.14", "6.15", "6.16", "6.17-rc5" ]
+        include:
+          # LTS / long-lived stable branches — always the latest point release
+          - { series: "5.15", image: "22.04" }
+          - { series: "6.1",  image: "24.04" }
+          - { series: "6.6",  image: "24.04" }
+          - { series: "6.8",  image: "24.04" }  # Ubuntu 24.04 GA kernel
+          - { series: "6.12", image: "26.04" }
+          - { series: "6.18", image: "26.04" }
+          # Current stable
+          - { series: "7.2",  image: "26.04" }
+          # Newest release candidate (allowed to fail)
+          - { series: "rc",   image: "26.04" }
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Prepare apt (disable man-db)
+      - name: Install base tools
         run: |
-          sudo apt-get purge -y man-db || true
-          sudo apt-get update
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates curl make bc flex bison libelf-dev libssl-dev kmod
 
-      - name: Install Dependencies
+      - name: Resolve kernel version
+        id: kver
         run: |
-          sudo apt-get install -y --no-install-recommends \
-            gcc-14 g++-14   build-essential bc flex bison libelf-dev libssl-dev wget curl ca-certificates \
-            tar xz-utils
+          INDEX=$(curl -fsSL https://kernel.ubuntu.com/mainline/)
+          ALL=$(grep -oP 'href="v\K[0-9]+\.[0-9]+(\.[0-9]+)?(-rc[0-9]+)?(?=/")' <<<"$INDEX" | sort -V)
+          if [ "${{ matrix.series }}" = "rc" ]; then
+            KVER=$(tail -n1 <<<"$ALL")
+            case "$KVER" in *-rc*) ;; *) echo "No release candidate newer than $KVER"; KVER= ;; esac
+          else
+            SERIES="${{ matrix.series }}"
+            KVER=$(grep -E "^${SERIES//./\\.}(\.[0-9]+)?$" <<<"$ALL" | tail -n1)
+            [ -n "$KVER" ] || { echo "No mainline build found for $SERIES"; exit 1; }
+          fi
+          echo "Resolved ${{ matrix.series }} -> ${KVER:-<none>}"
+          echo "kver=$KVER" >> "$GITHUB_OUTPUT"
+        shell: bash
 
-          # Entferne Dokumentation & Manpages
-          sudo rm -rf /usr/share/{man,doc,info,locale} || true
-
-      - name: Download Kernel Headers (mainline)
+      - name: Download kernel headers (mainline)
+        if: steps.kver.outputs.kver != ''
         run: |
-          KVER=${{ matrix.kernel }}
-          BASE_URL="https://kernel.ubuntu.com/mainline/v${KVER}/amd64/"
-          echo "Fetching kernel headers for $KVER from $BASE_URL"
-
-          INDEX=$(mktemp)
-          curl -sSL "$BASE_URL" -o "$INDEX"
-
-          HEADERS_ALL=$(grep -oP 'linux-headers-([^>]*)_all\.deb' "$INDEX" | head -n1)
-          HEADERS_GENERIC=$(grep -oP 'linux-headers-([^>]*)-generic_([^>]*)_amd64.deb' "$INDEX" | head -n1)
-
+          BASE_URL="https://kernel.ubuntu.com/mainline/v${{ steps.kver.outputs.kver }}/amd64/"
+          INDEX=$(curl -fsSL "$BASE_URL")
+          HEADERS_ALL=$(grep -oP 'linux-headers-[^">]*_all\.deb' <<<"$INDEX" | head -n1)
+          HEADERS_GENERIC=$(grep -oP 'linux-headers-[^">]*-generic_[^">]*_amd64\.deb' <<<"$INDEX" | head -n1)
           if [[ -z "$HEADERS_ALL" || -z "$HEADERS_GENERIC" ]]; then
-            echo "Could not find headers for $KVER"
-            cat "$INDEX"
+            echo "Could not find headers at $BASE_URL"
             exit 1
           fi
+          curl -fsSLO "${BASE_URL}${HEADERS_ALL}"
+          curl -fsSLO "${BASE_URL}${HEADERS_GENERIC}"
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./linux-headers-*.deb
+        shell: bash
 
-          echo "Downloading: $HEADERS_ALL and $HEADERS_GENERIC"
-          wget -q ${BASE_URL}${HEADERS_ALL}
-          wget -q ${BASE_URL}${HEADERS_GENERIC}
-
-          sudo dpkg -i linux-headers-*.deb
-
-      - name: Build Kernel Module
+      - name: Install the compiler the headers were built with
+        if: steps.kver.outputs.kver != ''
         run: |
-          KSRC=$(ls -d /usr/src/linux-headers-* | grep generic | head -n1)
+          KSRC=$(ls -d /usr/src/linux-headers-*-generic | head -n1)
+          CC_TEXT=$(grep '^CONFIG_CC_VERSION_TEXT=' "$KSRC/.config")
+          GCC=$(grep -oP 'gcc-[0-9]+' <<<"$CC_TEXT" | head -n1)
+          GCC=${GCC:-gcc}
+          echo "Headers built with: $CC_TEXT -> installing $GCC"
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$GCC" libc6-dev
+        shell: bash
+
+      - name: Build kernel module
+        if: steps.kver.outputs.kver != ''
+        run: |
+          KSRC=$(ls -d /usr/src/linux-headers-*-generic | head -n1)
           echo "Building against kernel headers in $KSRC"
           make clean
           make -j$(nproc) KSRC="$KSRC"
+          modinfo ./8852au.ko | grep -E '^(version|vermagic):'
+        shell: bash
