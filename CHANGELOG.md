@@ -8,6 +8,15 @@ this file was introduced are not backfilled — see the git log for prior histor
 
 ## [Unreleased]
 
+## [1.17.1] — 2026-10-17
+
+Patch release: restores builds on current 6.1 / 6.6 / 6.12 stable
+kernels (broken by upstream stable backports), rebuilds CI so those
+backports get caught automatically, and corrects the Secure Boot docs.
+Build-verified against 5.15.223, 6.1.190, 6.6.159, 6.8.12, 6.12.113,
+6.18.57, 6.19.14 and 7.0.14. Linux 7.1+ is not yet supported (see
+`docs/TODO.md`).
+
 ### Added
 - README "Before you install: do you actually need this?" section
   pointing users at `modinfo rtw89_8852au` to check whether the
@@ -22,6 +31,37 @@ this file was introduced are not backfilled — see the git log for prior histor
   trunk and the only long-lived branch. Tags continue to mark stable
   release points. README CI badge URL, CLAUDE.md release flow, and
   `docs/TODO.md` updated accordingly.
+
+- CI rewritten: the matrix now tracks *series* (5.15, 6.1, 6.6, 6.8,
+  6.12, 6.18, current stable, newest `-rc`) and resolves each to its
+  latest point release at run time, so stable backports of API
+  changes are caught as they ship. Each series builds in the Ubuntu
+  container matching the compiler Ubuntu's mainline headers were
+  built with (gcc-11 / gcc-13 / gcc-15). Also runs weekly on a
+  schedule, and `actions/checkout` is bumped to v7 (Node 24 — the
+  v4/Node 20 runtime was removed from GitHub runners in September
+  2026).
+- README **Kernel** badge now reflects the verified build range,
+  5.15–7.0 (7.1+ needs porting work; see `docs/TODO.md`).
+- `docs/secure-boot.md` rewritten around DKMS 3.x's automatic module
+  signing (`mokutil --import /var/lib/dkms/mok.pub`, once). The old
+  advice to run `make sign-install` on DKMS systems produced a second,
+  separately-installed module that `install-dkms.sh` deletes.
+
+### Fixed
+- Build failure on 6.12.101+ stable kernels (e.g. Debian trixie
+  6.12.113): the 6.13 `set_monitor_channel` signature change (extra
+  `struct net_device *` arg) was backported to 6.12.101, so the
+  `>= 6.13` guard in `ioctl_cfg80211.c` now also covers that range.
+- Build failure on 6.1.188+ and 6.6.157+ stable kernels: the 6.8
+  removal of `usb_driver.drvwrap` was backported to those branches;
+  the guard in `usb_intf.c` now accounts for it.
+- `suspend_rtw8852au` sleep hook used the bash-only `==` under
+  `#!/bin/sh`, so on dash-based systems (Debian, Ubuntu) both tests
+  errored and the module was never unloaded/reloaded around suspend.
+- `make clean` now removes the top-level `.module-common.o` that
+  kbuild ≥ 6.13 generates (it was being copied into `/usr/src` by
+  `dkms add`).
 
 ## [1.17.0] — 2026-05-21
 
