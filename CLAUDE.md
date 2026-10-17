@@ -48,7 +48,7 @@ To cut a release (e.g. bumping to `1.18.0`):
 2. **`CHANGELOG.md`** — rename `## [Unreleased]` to `## [1.18.0] — YYYY-MM-DD`, then add a fresh empty `## [Unreleased]` block above it. Entries should already be sorted into Keep-a-Changelog categories (Added / Changed / Deprecated / Removed / Fixed / Security).
 3. **`README.md`** — only if the supported-kernel range changed (e.g. CI matrix gained a new version): update the **Kernel** badge URL (`https://img.shields.io/badge/kernel-5.15--7.0-orange`) and the lineage paragraph's "tracks current kernel releases" claim if relevant.
 4. **Verify** — `make clean && make` locally, then `modinfo 8852au.ko | grep ^version` should report the new `v1.18.0`.
-5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag v1.18.0`, `git push origin main --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
+5. **Tag** — commit (style: `[RELEASE] Cut v1.18.0`), `git tag -a v1.18.0 -m "v1.18.0"` (must be **annotated** — `--follow-tags` silently skips lightweight tags), `git push origin main --follow-tags`, then cut a GitHub release citing the relevant `CHANGELOG.md` section.
 
 Do **not** bump `RTK_CORE_TAGINFO` in `phl/phl_git_info.h` as part of fork releases — that macro is the original Realtek upstream tag (frozen at the 2021 vendor drop) and has a different semantic.
 
