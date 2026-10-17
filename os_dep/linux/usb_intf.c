@@ -151,7 +151,12 @@ struct rtw_usb_drv usb_drv = {
 	.usbdrv.resume = rtw_dev_resume,
 	.usbdrv.reset_resume   = rtw_dev_resume,
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0))
+/* drvwrap removed in 6.8, backported to 6.6.157 and 6.1.188 stable */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 188)) || \
+	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 2, 0) && \
+	 LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 157)) || \
+	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) && \
+	 LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0))
 	.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 #else
 	.usbdrv.driver.shutdown = rtw_dev_shutdown,

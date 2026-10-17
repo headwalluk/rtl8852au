@@ -5904,7 +5904,10 @@ static void rtw_get_chbwoff_from_cfg80211_chan_def(
 }
 
 static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0))
+/* net_device arg added in 6.13, backported to 6.12.101 stable */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)) || \
+	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 101) && \
+	 LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0))
 	, struct net_device *dev
 	, struct cfg80211_chan_def *chandef
 #else
