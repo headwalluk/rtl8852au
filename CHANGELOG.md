@@ -8,6 +8,11 @@ this file was introduced are not backfilled — see the git log for prior histor
 
 ## [Unreleased]
 
+### Added
+
+- `docs/mac-address.md`: explains static vs. randomised MAC addresses
+  (NetworkManager scan/connection randomisation, `rtw_initmac`).
+
 ## [1.17.1] — 2026-10-17
 
 Patch release: restores builds on current 6.1 / 6.6 / 6.12 stable

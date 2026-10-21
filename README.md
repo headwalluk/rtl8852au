@@ -49,6 +49,7 @@ sudo ./install-dkms.sh
 
 - [Install / update / uninstall](docs/install.md) — distro requirements, the install script, manual DKMS commands.
 - [Secure Boot](docs/secure-boot.md) — module signing and MOK enrolment.
+- [MAC address](docs/mac-address.md) — why the address may look random, and how to use the adapter's real MAC.
 - [Supported hardware](docs/supported-hardware.md) — chipsets, known device IDs, and the USB modeswitch quirk for the D-Link DWA-X1850.
 - [TODO / backlog](docs/TODO.md) — deferred cleanup, known bugs, planned work.
 - [Original reference documents](./reference-docs/) — the PDFs shipped with the Realtek vendor drop (config, certification, mode-specific guides).
